@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin</title>
+    <link rel="stylesheet" href="/main.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><a href="/" style="text-decoration:none;color:inherit">webflow</a></div>
+      <div style="flex:1"></div>
+      <div class="auth">
+        <div id="profile" class="profile hidden">
+          <span id="profileName"></span>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+    </header>
+    <main class="container">
+      <h1>Admin panel</h1>
+      <section style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+        <div>
+          <h3>Products</h3>
+          <form id="newProduct" class="auth-form" style="background:#fafafa;border:1px solid #eee;border-radius:10px">
+            <input name="title" placeholder="Title" required />
+            <input name="author" placeholder="Author" />
+            <input name="cover_url" placeholder="Cover URL" />
+            <textarea name="description" placeholder="Description" rows="3"></textarea>
+            <menu>
+              <button id="createBtn" class="primary" type="submit">Create</button>
+            </menu>
+          </form>
+          <div id="productsList"></div>
+        </div>
+        <div>
+          <h3>Users</h3>
+          <div id="usersList"></div>
+        </div>
+      </section>
+    </main>
+    <script type="module">
+      import { toast } from './notifications.js';
+      async function api(path, opts={}){
+        const res = await fetch(path, { headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts });
+        if(!res.ok) throw new Error((await res.json()).error || res.statusText);
+        return res.json();
+      }
+      const profile = document.getElementById('profile');
+      const profileName = document.getElementById('profileName');
+      const logoutBtn = document.getElementById('logoutBtn');
+      logoutBtn.addEventListener('click', async ()=>{ await api('/api/logout',{method:'POST'}); location.href='/'; });
+      async function guard(){
+        const { user } = await api('/api/me');
+        if(!user || !user.is_admin){ location.href = '/'; return; }
+        profile.classList.remove('hidden');
+        profileName.textContent = `${user.vards} ${user.uzvards}`;
+      }
+      async function loadProducts(){
+        const list = document.getElementById('productsList');
+        const items = await api('/api/products');
+        list.innerHTML = items.map(p=>`
+          <div class="card" style="padding:10px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center">
+            <img src="${p.cover_url}" style="width:80px;height:60px;object-fit:cover;border-radius:6px"/>
+            <div>
+              <div><strong>${p.title}</strong></div>
+              <div class="byline">by ${p.author||''}</div>
+            </div>
+            <div style="display:flex;gap:8px">
+              <button data-act="edit" data-id="${p.id}">Edit</button>
+              <button data-act="delete" data-id="${p.id}">Delete</button>
+            </div>
+          </div>`).join('');
+        list.onclick = async (e)=>{
+          const btn = e.target.closest('button');
+          if(!btn) return;
+          const id = btn.dataset.id;
+          if(btn.dataset.act==='delete'){
+            if(confirm('Delete?')){ await api(`/api/admin/products/${id}`, { method:'DELETE' }); toast('Deleted','success'); await loadProducts(); }
+          }
+          if(btn.dataset.act==='edit'){
+            const title = prompt('New title?'); if(!title) return;
+            await api(`/api/admin/products/${id}`, { method:'PUT', body: JSON.stringify({ title }) });
+            toast('Updated','success'); await loadProducts();
+          }
+        }
+      }
+      document.getElementById('newProduct').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const body = Object.fromEntries(new FormData(e.target));
+        await api('/api/admin/products', { method:'POST', body: JSON.stringify(body) });
+        e.target.reset(); toast('Created','success'); await loadProducts();
+      });
+      async function loadUsers(){
+        const list = document.getElementById('usersList');
+        try{
+          const users = await api('/api/admin/users');
+          list.innerHTML = users.map(u=>`<div>${u.id}. ${u.vards} ${u.uzvards} — ${u.epasts} ${u.is_admin?'(admin)':''}</div>`).join('');
+        }catch(e){ list.textContent = 'No access'; }
+      }
+      (async()=>{ await guard(); await loadProducts(); await loadUsers(); })();
+    </script>
+  </body>
+</html>

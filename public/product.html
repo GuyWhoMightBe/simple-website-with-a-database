@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Product</title>
+    <link rel="stylesheet" href="/main.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><a href="/" style="text-decoration:none;color:inherit">webflow</a></div>
+      <div style="flex:1"></div>
+      <div class="auth">
+        <button id="loginBtn">Log In</button>
+        <button id="signupBtn" class="primary">Sign Up for Free</button>
+        <div id="profile" class="profile hidden">
+          <span id="profileName"></span>
+          <a id="adminLink" class="hidden" href="/admin.html">Admin</a>
+          <button id="logoutBtn">Logout</button>
+        </div>
+      </div>
+    </header>
+    <main class="container" id="detail"></main>
+
+    <dialog id="authDialog">
+      <form method="dialog" class="auth-form" id="loginForm">
+        <h3>Login</h3>
+        <input name="epasts" type="email" placeholder="E-pasts" required />
+        <input name="parole" type="password" placeholder="Parole" required />
+        <menu>
+          <button value="cancel">Cancel</button>
+          <button id="doLogin" value="default" class="primary">Login</button>
+        </menu>
+      </form>
+      <hr />
+      <form method="dialog" class="auth-form" id="registerForm">
+        <h3>Register</h3>
+        <div class="twocol">
+          <input name="vards" placeholder="Vārds" required />
+          <input name="uzvards" placeholder="Uzvārds" required />
+        </div>
+        <input name="epasts" type="email" placeholder="E-pasts" required />
+        <input name="parole" type="password" placeholder="Parole" required />
+        <menu>
+          <button value="cancel">Cancel</button>
+          <button id="doRegister" value="default" class="primary">Register</button>
+        </menu>
+      </form>
+    </dialog>
+
+    <script type="module">
+      import { toast } from './notifications.js';
+      async function api(path, opts={}){
+        const res = await fetch(path, { headers:{'Content-Type':'application/json'}, credentials:'same-origin', ...opts });
+        if(!res.ok) throw new Error((await res.json()).error || res.statusText);
+        return res.json();
+      }
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      const wrap = document.getElementById('detail');
+
+      async function load(){
+        const p = await api(`/api/products/${id}`);
+        wrap.innerHTML = `
+          <article class="card" style="max-width:900px;margin:auto">
+            <div class="thumb"><img src="${p.cover_url || `https://picsum.photos/seed/${p.id}/900/500`}" alt=""/></div>
+            <div class="meta">
+              <h2 class="title">${p.title}</h2>
+              <div class="byline">by ${p.author || 'Unknown'}</div>
+              <p>${p.description || ''}</p>
+              <div class="stats"><button id="likeBtn" class="like">❤ <span id="likeCount">${p.likes_count||0}</span></button></div>
+            </div>
+          </article>`;
+        document.getElementById('likeBtn').addEventListener('click', async () => {
+          try{ const r = await api(`/api/products/${id}/like`, { method:'POST' }); document.getElementById('likeCount').textContent = r.likes; toast('Liked!', 'success'); } catch(e){ toast(e.message, 'error'); }
+        });
+      }
+
+      // basic auth controls reuse from index
+      const authDialog = document.getElementById('authDialog');
+      const loginBtn = document.getElementById('loginBtn');
+      const signupBtn = document.getElementById('signupBtn');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const profile = document.getElementById('profile');
+      const profileName = document.getElementById('profileName');
+      const adminLink = document.getElementById('adminLink');
+      loginBtn?.addEventListener('click', () => authDialog.showModal());
+      signupBtn?.addEventListener('click', () => authDialog.showModal());
+      document.getElementById('doLogin')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const f = document.getElementById('loginForm');
+        const body = Object.fromEntries(new FormData(f));
+        try{ await api('/api/login', { method:'POST', body: JSON.stringify(body) }); authDialog.close(); await syncMe(); toast('Logged in', 'success'); }
+        catch(err){ toast(err.message, 'error'); }
+      });
+      document.getElementById('doRegister')?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const f = document.getElementById('registerForm');
+        const body = Object.fromEntries(new FormData(f));
+        try{ await api('/api/register', { method:'POST', body: JSON.stringify(body) }); toast('Registered! Now log in.', 'success'); }
+        catch(err){ toast(err.message, 'error'); }
+      });
+      logoutBtn?.addEventListener('click', async () => { await api('/api/logout', { method:'POST' }); await syncMe(); });
+      async function syncMe(){
+        const { user } = await api('/api/me');
+        if(user){ profile.classList.remove('hidden'); loginBtn.style.display='none'; signupBtn.style.display='none'; profileName.textContent = `${user.vards} ${user.uzvards}`; adminLink.classList.toggle('hidden', !user.is_admin); } else { profile.classList.add('hidden'); loginBtn.style.display=''; signupBtn.style.display=''; }
+      }
+      (async ()=>{ try{ await syncMe(); }catch{} await load(); })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Showcase</title>
+    <link rel="stylesheet" href="main.css" />
+    </head>
+    <body>
+        <header class="topbar">
+            <div class="brand">webflow</div>
+            <nav class="mainnav">
+                <a class="active" href="index.html">Showcase</a>
+                <a href="designers.html">Designers</a>
+                <a href="learn.html">Learn & Support</a>
+            </nav>
+            <div class="auth">
+                <button id="loginBtn">Log In</button>
+                <button id="signupBtn" class="primary">Sign Up for Free</button>
+                <div id="profile" class="profile hidden">
+                    <span id="profileName"></span>
+                    <a id="adminLink" class="hidden" href="admin.html" style="margin-left:8px">Admin</a>
+                    <button id="logoutBtn">Logout</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="container">
+            <h1>Explore the Showcase</h1>
+            <div class="tabs">
+                <button class="tab active" data-tab="popular">Popular</button>
+                <button class="tab" data-tab="recent">Recent</button>
+                <button class="tab" data-tab="cloneable">Cloneable</button>
+            </div>
+            <div class="subtabs">
+                <button class="subtab active" data-sub="liked">Most Liked</button>
+                <button class="subtab" data-sub="recent">Recent</button>
+                <button class="subtab" data-sub="viewed">Most Viewed</button>
+            </div>
+
+            <div class="filterbar hidden" id="dateFilterBar">
+                <label for="recentRange">Date</label>
+                <select id="recentRange">
+                    <option value="all">All time</option>
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                </select>
+            </div>
+
+            <div style="display:flex;justify-content:flex-end;margin:8px 0">
+                <button id="createCardBtn" class="primary hidden">Create Card</button>
+            </div>
+            <section id="grid" class="grid"></section>
+        </main>
+
+        <dialog id="authDialog">
+            <form method="dialog" class="auth-form" id="loginForm">
+                <h3>Login</h3>
+                <input name="epasts" type="email" placeholder="E-pasts" required />
+                <input name="parole" type="password" placeholder="Parole" required />
+                <menu>
+                    <button value="cancel">Cancel</button>
+                    <button id="doLogin" value="default" class="primary">Login</button>
+                </menu>
+            </form>
+            <hr />
+            <form method="dialog" class="auth-form" id="registerForm">
+                <h3>Register</h3>
+                <div class="twocol">
+                    <input name="vards" placeholder="Vārds" required />
+                    <input name="uzvards" placeholder="Uzvārds" required />
+                </div>
+                <input name="epasts" type="email" placeholder="E-pasts" required />
+                <input name="parole" type="password" placeholder="Parole" required />
+                <menu>
+                    <button value="cancel">Cancel</button>
+                    <button id="doRegister" value="default" class="primary">Register</button>
+                </menu>
+            </form>
+        </dialog>
+
+        <dialog id="createDialog">
+            <form method="dialog" class="auth-form" id="createForm">
+                <h3>Create Card</h3>
+                <input name="title" placeholder="Title" required />
+                <input name="cover_url" placeholder="Cover Image URL (640x400 suggested)" required />
+                <textarea name="description" rows="3" placeholder="Short description"></textarea>
+                <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" name="cloneable" checked /> Cloneable</label>
+                <menu>
+                    <button value="cancel">Cancel</button>
+                    <button id="doCreate" value="default" class="primary">Create</button>
+                </menu>
+            </form>
+        </dialog>
+
+        <template id="cardTpl">
+            <article class="card">
+                <div class="thumb"><img alt="" /></div>
+                <div class="meta">
+                    <h3 class="title"></h3>
+                    <div class="byline"></div>
+                    <div class="stats">
+                        <span class="views">0</span>
+                        <span class="comments">0</span>
+                        <button class="like">❤ <span class="likeCount">0</span></button>
+                    </div>
+                </div>
+            </article>
+        </template>
+
+        <script src="script.js"></script>
+    </body>
+    </html>
