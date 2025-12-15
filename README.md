@@ -17,11 +17,7 @@ parole (VARCHAR, hashēta)
 Izveidot tīmekļa vietni atbilstoši dotajam paraugam:
 Galvenās sadaļas:
 
-Sākumlapa ar spēli
-
 Sadaļas designers, about utt
-
-spēles detalizēts skats
 
 Reģistrācija
 
@@ -63,5 +59,6 @@ Veiksmīga reģistrācija/pieslēgšanās
 Kļūdas paziņojumi (nepareiza parole, lietotājs jau eksistē u.c.)
 
 Veiksmīgs “patīk” nosūtījums.
+
 
 Neatļauta piekļuve aizsargātām lapām
